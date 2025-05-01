@@ -1,0 +1,139 @@
+{% comment %}
+  Reels → Shoppable Slider  •  Dawn-ready, refined UI (v 2025-05-02)
+{% endcomment %}
+
+<style>
+:root{
+  --reels-gap-m:2px;
+  --reels-gap-d:0px;
+}
+@media (max-width:768px){:root{--reels-gap:var(--reels-gap-m)}}
+@media (min-width:769px){:root{--reels-gap:var(--reels-gap-d)}}
+
+.reels-slider .carousel-cell{
+  width:clamp(168px,46vw,224px);
+  aspect-ratio:9/16;
+  margin-right:var(--reels-gap);
+  flex-shrink:0;
+  position:relative;
+  border-radius:20px;
+  overflow:hidden;
+  background:rgba(255,255,255,.9);
+  padding:5px;
+  box-sizing:border-box;
+}
+.reels-slider .carousel-cell:last-child{margin-right:0}
+
+@supports not (aspect-ratio: 9/16){
+  .reels-slider .carousel-cell{height:100%}
+  .reels-slider .carousel-cell::before{content:"";float:left;padding-top:177.78%}
+  .reels-slider .carousel-cell::after{content:"";display:block;clear:both}
+}
+
+.reel-card{width:100%;height:100%;position:relative;}
+.reels-slider video{object-fit:cover;width:100%;height:100%;display:block;}
+
+.reels-card,
+a.reels-card:visited,
+a.reels-card:hover,
+a.reels-card:focus{
+  text-decoration:none!important;
+  border-bottom:none!important;
+  box-shadow:none!important;
+  color:#7B2B26!important;
+}
+
+.reels-card{
+  position:absolute;left:8px;right:8px;bottom:8px;
+  display:flex;gap:8px;align-items:center;
+  padding:6px 8px;
+  background:rgba(255,255,255,.9);
+  border-radius:10px;
+  box-shadow:0 1px 3px rgba(0,0,0,.15);
+  cursor:pointer;
+  backdrop-filter:saturate(180%) blur(8px);
+  transition:background .15s ease;
+}
+@media (hover:hover){
+  .reels-card:hover{background:rgba(255,255,255,.95);}
+}
+
+.rc-image{
+  width:48px;height:48px;flex:0 0 auto;
+  object-fit:cover;border-radius:4px;
+}
+
+.rc-info{
+  display:flex;flex-direction:column;
+  gap:4px;line-height:1.25;font-size:14px;
+  color:#7B2B26;text-align:left;
+}
+.rc-title{font-weight:700;}
+.rc-price{font-weight:500;}
+.rc-cta{font-weight:500;font-size:13px;}
+.rc-cta.soldout{color:#c00;}
+
+.reels-slider{
+  padding-inline:12px;
+  box-sizing:border-box;
+}
+.reels-slider > .carousel{
+  width:100%;
+  margin-inline:auto;
+}
+</style>
+
+<section class="reels-slider">
+  <div class="carousel js-flickity"
+       data-flickity='{"wrapAround":true,"autoPlay":5500,"pauseAutoPlayOnHover":false,"cellAlign":"left","contain":true,"pageDots":false}'>
+    {% for block in section.blocks %}
+      {% liquid
+        assign prod    = block.settings.product
+        assign variant = prod.variants.first
+      %}
+      <div class="carousel-cell">
+        <link rel="prefetch" href="{{ prod.url }}" />
+        <div class="reel-card">
+          {{ block.settings.video | video_tag:
+              autoplay:true, loop:true, muted:true, playsinline:true,
+              preload:"none", poster:block.settings.poster }}
+          <a href="{{ prod.url }}" class="reels-card" role="link">
+            <img class="rc-image"
+                 src="{{ prod.featured_image | image_url: width:160, height:160, crop:'center' }}"
+                 alt="{{ prod.title | escape }}">
+            <div class="rc-info">
+              <span class="rc-title">{{ prod.title }}</span>
+              <span class="rc-price">{{ variant.price | money }}</span>
+              {% if variant.available %}
+                <span class="rc-cta">Buy now</span>
+              {% else %}
+                <span class="rc-cta soldout">Sold out</span>
+              {% endif %}
+            </div>
+          </a>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Reels slider",
+  "tag": "section",
+  "blocks": [
+    {
+      "type": "reel",
+      "name": "Reel",
+      "settings": [
+        { "type": "video",        "id": "video",   "label": "Reel video (MP4/WebM)" },
+        { "type": "image_picker", "id": "poster",  "label": "Poster image" },
+        { "type": "product",      "id": "product", "label": "Related product" }
+      ]
+    }
+  ],
+  "presets": [
+    { "name": "Reels slider" }
+  ]
+}
+{% endschema %}
